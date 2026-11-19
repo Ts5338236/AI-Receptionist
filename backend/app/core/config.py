@@ -62,5 +62,24 @@ class Settings(BaseSettings):
     QDRANT_API_KEY: str = ""
     QDRANT_COLLECTION_NAME: str = "receptionist_knowledge_base"
 
+    # Voice Gateway & Audio Pipeline Settings
+    STT_PROVIDER: str = "deepgram"
+    DEEPGRAM_API_KEY: str = ""
+    STT_LANGUAGE: str = "en-US"
+    STT_SAMPLE_RATE: int = 16000
+
+    TTS_PROVIDER: str = "elevenlabs"
+    ELEVENLABS_API_KEY: str = ""
+    ELEVENLABS_VOICE_ID: str = "21m00Tcm4TlvDq8ikWAM"
+    ELEVENLABS_MODEL_ID: str = "eleven_multilingual_v2"
+    TTS_LANGUAGE: str = "en"
+
+    VOICE_WS_TIMEOUT_SECONDS: int = 60
+    VOICE_SESSION_TIMEOUT_SECONDS: int = 300
+    VOICE_MAX_AUDIO_CHUNK_BYTES: int = 262144
+    VAD_SILENCE_TIMEOUT_MS: int = 1500
+    VAD_MAX_RECORDING_MS: int = 15000
+    AUDIO_RETENTION_DAYS: int = 0
+
 
 settings = Settings()

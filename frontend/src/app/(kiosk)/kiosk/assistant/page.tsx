@@ -9,16 +9,17 @@ import {
   Sparkles,
   Bot,
   User,
-  Volume2,
   AlertCircle,
   RotateCcw,
   MicOff,
+  VolumeX,
 } from "lucide-react";
 import { StatusBanner } from "@/components/kiosk/status-banner";
 import { AvatarStage, AvatarState } from "@/components/kiosk/avatar-stage";
 import { KioskFooter } from "@/components/kiosk/kiosk-footer";
 import { useLanguage } from "@/context/language-context";
 import { useKioskSession } from "@/hooks/use-kiosk-session";
+import { useVoiceClient } from "@/hooks/useVoiceClient";
 import { conversationService } from "@/services/conversation-service";
 
 interface Message {
@@ -29,15 +30,21 @@ interface Message {
 }
 
 export default function AssistantPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { secondsRemaining, isWarning, resetActivity } = useKioskSession({
     timeoutSeconds: 90,
     homePath: "/kiosk",
   });
 
-  const [avatarState, setAvatarState] = useState<AvatarState>("IDLE");
   const [inputText, setInputText] = useState("");
-  const [micPermissionDenied, setMicPermissionDenied] = useState(false);
+  const transcriptEndRef = useRef<HTMLDivElement>(null);
+
+  // Initialize production Voice Client hook
+  const voice = useVoiceClient({
+    language: language === "hi" ? "hi-IN" : "en-US",
+  });
+
+  // Consolidated conversational messages (initial + voice + text)
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -47,31 +54,43 @@ export default function AssistantPage() {
     },
   ]);
 
-  const transcriptEndRef = useRef<HTMLDivElement>(null);
+  // Synchronize incoming voice transcripts into message stream
+  useEffect(() => {
+    if (voice.messages.length > 1) {
+      setMessages(voice.messages);
+    }
+  }, [voice.messages]);
 
   useEffect(() => {
     transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, voice.partialTranscript]);
 
-  const handleToggleMic = () => {
+  // Determine avatar operational visual state
+  const computedAvatarState: AvatarState = voice.isRecording
+    ? "LISTENING"
+    : voice.connectionState === "PROCESSING"
+    ? "THINKING"
+    : voice.isPlaying
+    ? "SPEAKING"
+    : voice.connectionState === "ERROR"
+    ? "ERROR"
+    : "IDLE";
+
+  const handleToggleMic = async () => {
     resetActivity();
-    if (avatarState === "LISTENING") {
-      setAvatarState("THINKING");
-      setTimeout(() => {
-        setAvatarState("SPEAKING");
-        setTimeout(() => setAvatarState("IDLE"), 3500);
-      }, 1200);
+    if (voice.isRecording) {
+      voice.stopListening();
+    } else if (voice.isPlaying) {
+      // Barge-in: stop receptionist speech
+      voice.cancelSpeech();
     } else {
-      // Browser Speech API check
-      if (typeof window !== "undefined" && !navigator.mediaDevices) {
-        setMicPermissionDenied(true);
-      }
-      setAvatarState("LISTENING");
+      await voice.startListening();
     }
   };
 
   const handleRestartConversation = () => {
     resetActivity();
+    voice.cancelSpeech();
     setMessages([
       {
         id: Date.now().toString(),
@@ -80,7 +99,6 @@ export default function AssistantPage() {
         time: "Just now",
       },
     ]);
-    setAvatarState("IDLE");
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -101,12 +119,9 @@ export default function AssistantPage() {
 
     setMessages((prev) => [...prev, userMsg]);
     setInputText("");
-    setAvatarState("THINKING");
 
     try {
       const response = await conversationService.sendMessage({ message: query });
-      setAvatarState("SPEAKING");
-
       const botResponse: Message = {
         id: (Date.now() + 1).toString(),
         sender: "receptionist",
@@ -117,10 +132,16 @@ export default function AssistantPage() {
         }),
       };
       setMessages((prev) => [...prev, botResponse]);
-      setTimeout(() => setAvatarState("IDLE"), 3500);
     } catch {
-      setAvatarState("ERROR");
-      setTimeout(() => setAvatarState("IDLE"), 3000);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          sender: "receptionist",
+          text: "I experienced a temporary communication issue. Please try again.",
+          time: "Just now",
+        },
+      ]);
     }
   };
 
@@ -131,8 +152,20 @@ export default function AssistantPage() {
       {/* Main Split Screen Area: Avatar Stage (Left/Top) & Transcript (Right/Bottom) */}
       <div className="flex-1 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 p-4 md:p-6 overflow-hidden">
         {/* Left Column: Digital Human Avatar Stage */}
-        <div className="lg:col-span-5 flex flex-col items-center justify-center p-6 rounded-3xl bg-slate-900/40 border border-slate-800 backdrop-blur-md">
-          <AvatarStage state={avatarState} size="compact" />
+        <div className="lg:col-span-5 flex flex-col items-center justify-center p-6 rounded-3xl bg-slate-900/40 border border-slate-800 backdrop-blur-md relative">
+          <AvatarStage state={computedAvatarState} size="compact" />
+
+          {/* Barge-in Button when Avatar is Speaking */}
+          {voice.isPlaying && (
+            <button
+              type="button"
+              onClick={voice.cancelSpeech}
+              className="absolute bottom-6 px-4 py-2 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-semibold flex items-center gap-2 hover:bg-amber-500/30 transition shadow-lg"
+            >
+              <VolumeX className="w-4 h-4" />
+              <span>Tap to Interrupt / Barge-in</span>
+            </button>
+          )}
         </div>
 
         {/* Right Column: Live Conversation Transcript & Touch Controls */}
@@ -148,7 +181,11 @@ export default function AssistantPage() {
                   {t.conversationTitle}
                 </h2>
                 <span className="text-xs text-slate-400 font-medium">
-                  {t.conversationSubtitle}
+                  {voice.isRecording
+                    ? "Listening to speech..."
+                    : voice.isPlaying
+                    ? "Speaking response..."
+                    : t.conversationSubtitle}
                 </span>
               </div>
             </div>
@@ -207,16 +244,39 @@ export default function AssistantPage() {
                 )}
               </div>
             ))}
+
+            {/* Live Partial Streaming Transcript Bubble */}
+            {voice.partialTranscript && (
+              <div className="flex gap-3 justify-end animate-pulse">
+                <div className="max-w-lg p-4 rounded-2xl text-sm leading-relaxed bg-sky-500/50 text-white rounded-br-none border border-sky-400/40">
+                  <p className="italic">{voice.partialTranscript}...</p>
+                  <span className="block text-[10px] mt-1.5 opacity-75 text-right">
+                    Transcribing...
+                  </span>
+                </div>
+                <div className="w-8 h-8 rounded-full bg-sky-600 flex items-center justify-center shrink-0 text-white mt-1">
+                  <User className="w-4 h-4" />
+                </div>
+              </div>
+            )}
+
             <div ref={transcriptEndRef} />
           </div>
 
           {/* Touch-Friendly Input & Tactile Microphone Area */}
           <div className="pt-4 border-t border-slate-800 flex flex-col gap-3">
-            {/* Prototype Disclosures & Alerts */}
-            {micPermissionDenied && (
+            {/* Microphone State & Error Banners */}
+            {voice.permissionState === "DENIED" && (
               <div className="flex items-center gap-2 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs">
                 <MicOff className="w-4 h-4 shrink-0 text-amber-400" />
-                <span>Microphone access unavailable. You can use the touch keyboard below.</span>
+                <span>Microphone access denied. You can use the touch keyboard below.</span>
+              </div>
+            )}
+
+            {voice.errorMessage && (
+              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-xs">
+                <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+                <span>{voice.errorMessage}</span>
               </div>
             )}
 
@@ -226,19 +286,28 @@ export default function AssistantPage() {
             </div>
 
             <form onSubmit={handleSendMessage} className="flex items-center gap-3">
-              {/* Large Microphone Push-To-Talk Toggle Button */}
+              {/* Push-To-Talk Toggle Button with Dynamic Audio Pulse */}
               <button
                 type="button"
                 onClick={handleToggleMic}
                 aria-label={t.micTapToSpeak}
                 title={t.micTapToSpeak}
                 className={`w-16 h-14 rounded-2xl flex items-center justify-center transition-all cursor-pointer shadow-lg shrink-0 ${
-                  avatarState === "LISTENING"
-                    ? "bg-emerald-500 text-white animate-pulse shadow-emerald-500/40"
-                    : avatarState === "THINKING"
+                  voice.isRecording
+                    ? "bg-emerald-500 text-white shadow-emerald-500/40 ring-4 ring-emerald-500/30"
+                    : voice.isPlaying
+                    ? "bg-amber-500 text-white shadow-amber-500/30"
+                    : computedAvatarState === "THINKING"
                     ? "bg-indigo-600 text-white shadow-indigo-500/30"
                     : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white border border-slate-700"
                 }`}
+                style={
+                  voice.isRecording
+                    ? {
+                        transform: `scale(${1.0 + Math.min(0.2, voice.audioLevel * 0.4)})`,
+                      }
+                    : undefined
+                }
               >
                 <Mic className="w-6 h-6" />
               </button>

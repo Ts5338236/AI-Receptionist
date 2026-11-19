@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import auth, health, root, tenants, users
+from app.api.v1.endpoints import auth, health, root, tenants, users, voice
 
 api_router = APIRouter()
 
@@ -20,3 +20,6 @@ api_router.include_router(tenants.router, prefix="/tenants", tags=["Tenants"])
 
 # User & Access Management
 api_router.include_router(users.router, prefix="/users", tags=["Users"])
+
+# Real-Time Voice Gateway (WebSocket)
+api_router.include_router(voice.router, prefix="/voice", tags=["Voice"])
