@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import auth, health, root, tenants, users, voice
+from app.api.v1.endpoints import auth, conversations, health, root, tenants, users, voice
 
 api_router = APIRouter()
 
@@ -23,3 +23,6 @@ api_router.include_router(users.router, prefix="/users", tags=["Users"])
 
 # Real-Time Voice Gateway (WebSocket)
 api_router.include_router(voice.router, prefix="/voice", tags=["Voice"])
+
+# AI Conversational Intelligence (LangGraph Engine)
+api_router.include_router(conversations.router, prefix="/conversations", tags=["Conversations"])

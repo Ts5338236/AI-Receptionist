@@ -81,5 +81,15 @@ class Settings(BaseSettings):
     VAD_MAX_RECORDING_MS: int = 15000
     AUDIO_RETENTION_DAYS: int = 0
 
+    # Conversational AI & LangGraph Engine Settings (Phase 5)
+    LLM_PROVIDER: str = "openai"
+    OPENAI_API_KEY: str = ""
+    OPENAI_MODEL: str = "gpt-4o"
+    OPENAI_TEMPERATURE: float = 0.3
+    OPENAI_MAX_TOKENS: int = 500
+    LLM_REQUEST_TIMEOUT_SECONDS: int = 15
+    CONVERSATION_MAX_TURNS: int = 30
+    CONVERSATION_RETENTION_DAYS: int = 7
+
 
 settings = Settings()

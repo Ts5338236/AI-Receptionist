@@ -83,24 +83,35 @@ class VoiceSession:
         return final_transcript
 
     async def generate_response(self, user_transcript: str) -> str:
-        """Generates conversational reception response for visitor transcript."""
-        # Clean query
-        query = user_transcript.strip().lower()
+        """Generates conversational reception response for visitor transcript via LangGraph."""
+        try:
+            from app.ai.graph.workflow import conversation_graph
+            from app.ai.schemas.intent import ExtractedEntities
 
-        if "check in" in query or "appointment" in query:
-            return "Welcome! I can certainly assist you with check-in. Please tap the Check-In button on screen or provide your name."
-        elif "employee" in query or "meet" in query or "find" in query:
-            return "I can help you locate anyone in the directory. Which team member are you visiting today?"
-        elif "navigation" in query or "restroom" in query or "floor" in query or "where" in query:
-            return (
-                "Our office facilities, conference rooms, and elevators are directly down the corridor to your right."
-            )
-        elif "help" in query or "assistance" in query:
-            return (
-                "I am your virtual receptionist. You can ask me for check-in, employee lookups, or office navigation."
-            )
-        else:
-            return f"Thank you. I heard: '{user_transcript}'. How may I best assist you today?"
+            initial_state = {
+                "conversation_id": self.session_id,
+                "tenant_id": self.tenant_id,
+                "branch_id": None,
+                "kiosk_id": self.kiosk_id,
+                "raw_input": user_transcript,
+                "normalized_input": user_transcript,
+                "messages": [],
+                "intent_result": None,
+                "extracted_entities": ExtractedEntities(),
+                "selected_tool": None,
+                "tool_arguments": {},
+                "tool_result": None,
+                "response_text": "",
+                "validation_error": None,
+                "is_escalated": False,
+                "needs_clarification": False,
+                "execution_route": "standard",
+            }
+            final_state = await conversation_graph.ainvoke(initial_state)
+            return final_state.get("response_text", f"Thank you. I heard: '{user_transcript}'. How may I assist you?")
+        except Exception as exc:
+            logger.error("LangGraph processing failed in voice session %s: %s", self.session_id, exc)
+            return f"Welcome! I heard: '{user_transcript}'. How may I assist you today?"
 
     async def synthesize_speech_stream(self, text: str) -> AsyncGenerator[SpeechAudioChunkPayload, None]:
         """Streams synthesized speech audio chunks with viseme alignments."""

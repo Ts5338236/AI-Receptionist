@@ -2,6 +2,7 @@
 
 from app.db.base import Base
 from app.models.audit import AuditLog
+from app.models.conversation import Conversation, ConversationMessage
 from app.models.tenant import Branch, KioskDevice, Tenant, TenantSetting
 from app.models.user import Permission, Role, RolePermission, User, UserRole
 from app.models.visitor import Visitor, VisitorSession
@@ -19,5 +20,7 @@ __all__ = [
     "RolePermission",
     "Visitor",
     "VisitorSession",
+    "Conversation",
+    "ConversationMessage",
     "AuditLog",
 ]
