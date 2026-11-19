@@ -8,6 +8,7 @@ interface AccessibilityContextType {
   highContrast: boolean;
   toggleHighContrast: () => void;
   textScale: TextScale;
+  setTextScale: (scale: TextScale) => void;
   increaseTextSize: () => void;
   decreaseTextSize: () => void;
   resetAccessibility: () => void;
@@ -17,6 +18,7 @@ const AccessibilityContext = createContext<AccessibilityContextType>({
   highContrast: false,
   toggleHighContrast: () => {},
   textScale: "normal",
+  setTextScale: () => {},
   increaseTextSize: () => {},
   decreaseTextSize: () => {},
   resetAccessibility: () => {},
@@ -49,6 +51,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
         highContrast,
         toggleHighContrast,
         textScale,
+        setTextScale,
         increaseTextSize,
         decreaseTextSize,
         resetAccessibility,
