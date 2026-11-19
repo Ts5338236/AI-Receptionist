@@ -1,13 +1,21 @@
-import React from "react";
+"use client";
 
-export default function KioskLayout({
+import React from "react";
+import { LanguageProvider } from "@/context/language-context";
+import { AccessibilityProvider } from "@/context/accessibility-context";
+
+export default function KioskRootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <div className="touchscreen-kiosk fixed inset-0 w-screen h-screen overflow-hidden bg-black text-white flex flex-col justify-between">
-      {children}
-    </div>
+    <LanguageProvider>
+      <AccessibilityProvider>
+        <div className="touchscreen-kiosk fixed inset-0 w-screen h-screen overflow-hidden flex flex-col justify-between select-none">
+          {children}
+        </div>
+      </AccessibilityProvider>
+    </LanguageProvider>
   );
 }

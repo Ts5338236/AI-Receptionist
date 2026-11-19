@@ -1,4 +1,4 @@
-import Link from "next";
+import Link from "next/link";
 import { Monitor, LayoutDashboard, Shield, LogIn, Cpu, Database, Server, CheckCircle2, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";

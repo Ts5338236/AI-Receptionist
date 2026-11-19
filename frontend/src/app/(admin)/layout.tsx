@@ -1,4 +1,4 @@
-import Link from "next";
+import Link from "next/link";
 import { LayoutDashboard, Shield, Monitor, Bell, User, LogOut, Cpu, Settings } from "lucide-react";
 
 export default function AdminLayout({
