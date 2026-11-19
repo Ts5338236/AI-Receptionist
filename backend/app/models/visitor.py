@@ -3,6 +3,7 @@
 import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+
 from sqlalchemy import Boolean, DateTime, ForeignKey, Index, String
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -59,12 +60,8 @@ class VisitorSession(Base, UUIDPrimaryKeyMixin, TenantScopedMixin, TimestampMixi
     checkin_status: Mapped[str] = mapped_column(
         String(50), default="checked_in", nullable=False
     )  # checked_in, checked_out, scheduled, cancelled
-    checkin_time: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
-    )
-    checkout_time: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    checkin_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    checkout_time: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     session_metadata: Mapped[Dict[str, Any]] = mapped_column(JSONB, default=dict, nullable=False)
 
     # Relationships

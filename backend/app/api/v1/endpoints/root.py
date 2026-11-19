@@ -1,7 +1,9 @@
 """API root discovery and platform version information."""
 
 from typing import Any, Dict
+
 from fastapi import APIRouter
+
 from app.core.config import settings
 
 router = APIRouter()

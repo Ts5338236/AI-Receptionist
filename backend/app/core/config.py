@@ -1,17 +1,13 @@
 """Application configuration and environment settings using Pydantic Settings."""
 
 from typing import List, Union
-from pydantic import AnyHttpUrl, field_validator
+
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        case_sensitive=True,
-        extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore")
 
     # Application
     APP_NAME: str = "AI Receptionist Enterprise"
@@ -46,12 +42,8 @@ class Settings(BaseSettings):
     POSTGRES_USER: str = "postgres"
     POSTGRES_PASSWORD: str = "postgres"
     POSTGRES_DB: str = "ai_receptionist"
-    DATABASE_URL: str = (
-        "postgresql+asyncpg://postgres:postgres@localhost:5432/ai_receptionist"
-    )
-    SYNC_DATABASE_URL: str = (
-        "postgresql://postgres:postgres@localhost:5432/ai_receptionist"
-    )
+    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/ai_receptionist"
+    SYNC_DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/ai_receptionist"
     DB_POOL_SIZE: int = 10
     DB_MAX_OVERFLOW: int = 20
     DB_POOL_TIMEOUT: int = 30

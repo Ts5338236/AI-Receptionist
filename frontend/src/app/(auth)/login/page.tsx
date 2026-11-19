@@ -2,23 +2,64 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Cpu, ShieldCheck, ArrowRight, Lock, Mail } from "lucide-react";
+import { Cpu, ShieldCheck, ArrowRight, Lock, Mail, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In Phase 1 foundation: client redirect to dashboard
-    window.location.href = "/dashboard";
+    setErrorMessage(null);
+
+    // Client-side validation
+    if (!email || !password) {
+      setErrorMessage("Please enter both your corporate email and password.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch("http://localhost:8000/api/v1/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        setErrorMessage(
+          errorData.detail || "Authentication failed. Please verify your credentials."
+        );
+        setLoading(false);
+        return;
+      }
+
+      const tokenData = await response.json();
+      if (typeof window !== "undefined") {
+        localStorage.setItem("access_token", tokenData.access_token);
+        localStorage.setItem("refresh_token", tokenData.refresh_token);
+      }
+
+      // Redirect to enterprise dashboard
+      window.location.href = "/dashboard";
+    } catch (err: unknown) {
+      // If backend is not currently running or network issue, provide descriptive fallback
+      setErrorMessage(
+        "Unable to connect to authentication server. For development preview, verify FastAPI backend on port 8000."
+      );
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-md space-y-8">
-        {/* Brand */}
+        {/* Brand Header */}
         <div className="text-center space-y-2">
           <div className="w-14 h-14 rounded-2xl bg-sky-500 mx-auto flex items-center justify-center shadow-xl shadow-sky-500/30">
             <Cpu className="w-8 h-8 text-white" />
@@ -30,6 +71,14 @@ export default function LoginPage() {
             Access the AI Receptionist Fleet & Visitor Portal
           </p>
         </div>
+
+        {/* Error Alert Box */}
+        {errorMessage && (
+          <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-start gap-2.5 animate-in fade-in">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
 
         {/* Login Form Box */}
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl space-y-6">
@@ -68,9 +117,18 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <Button type="submit" className="w-full h-12 mt-2">
-              Sign In to Console
-              <ArrowRight className="w-4 h-4 ml-2" />
+            <Button type="submit" disabled={loading} className="w-full h-12 mt-2">
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Verifying Credentials...
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  Sign In to Console
+                  <ArrowRight className="w-4 h-4" />
+                </span>
+              )}
             </Button>
           </form>
 

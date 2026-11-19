@@ -30,10 +30,10 @@ async def test_not_found_rfc7807_error(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_validation_rfc7807_error(client: AsyncClient):
     """Verify 422 unprocessable entity responses conform to RFC 7807 Problem Details."""
-    # POST invalid JSON schema to /api/v1/tenants/
+    # POST invalid JSON schema to /api/v1/auth/login
     response = await client.post(
-        "/api/v1/tenants/",
-        json={"invalid_field": "data"},  # Missing required name and slug
+        "/api/v1/auth/login",
+        json={"invalid_field": "data"},  # Missing required email & password
     )
     assert response.status_code == 422
     assert response.headers["Content-Type"] == "application/problem+json"

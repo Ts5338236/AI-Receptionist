@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from typing import Any, Dict, Optional
+
 from pydantic import BaseModel, Field
 
 
@@ -28,3 +29,7 @@ class DatabaseHealthResponse(SubsystemHealth):
 
 class RedisHealthResponse(SubsystemHealth):
     name: str = "redis"
+
+
+class QdrantHealthResponse(SubsystemHealth):
+    name: str = "qdrant"

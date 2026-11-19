@@ -3,6 +3,7 @@
 import uuid
 from datetime import datetime
 from typing import Any, Dict, Optional
+
 from sqlalchemy import DateTime, ForeignKey, Index, String, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -36,6 +37,4 @@ class AuditLog(Base, UUIDPrimaryKeyMixin):
         index=True,
     )
 
-    __table_args__ = (
-        Index("ix_audit_logs_tenant_action", "tenant_id", "action"),
-    )
+    __table_args__ = (Index("ix_audit_logs_tenant_action", "tenant_id", "action"),)

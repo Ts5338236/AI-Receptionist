@@ -4,6 +4,7 @@ import logging
 import sys
 from contextvars import ContextVar
 from typing import Any, Dict, Optional
+
 from pythonjsonlogger import jsonlogger
 
 # Context variable to hold request correlation ID across async coroutines
@@ -44,9 +45,7 @@ def setup_logging(log_level: str = "INFO") -> logging.Logger:
         logger.removeHandler(handler)
 
     console_handler = logging.StreamHandler(sys.stdout)
-    formatter = EnterpriseJsonFormatter(
-        "%(asctime)s %(level)s %(logger)s %(correlation_id)s %(message)s"
-    )
+    formatter = EnterpriseJsonFormatter("%(asctime)s %(level)s %(logger)s %(correlation_id)s %(message)s")
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
 

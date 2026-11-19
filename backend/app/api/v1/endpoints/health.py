@@ -5,8 +5,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.db.session import get_db
-from app.schemas.health import DatabaseHealthResponse, HealthResponse, RedisHealthResponse
-from app.services.health import check_database_health, check_redis_health
+from app.schemas.health import (
+    DatabaseHealthResponse,
+    HealthResponse,
+    QdrantHealthResponse,
+    RedisHealthResponse,
+)
+from app.services.health import (
+    check_database_health,
+    check_qdrant_health,
+    check_redis_health,
+)
 
 router = APIRouter()
 
@@ -52,6 +61,21 @@ async def get_redis_health(
 ) -> RedisHealthResponse:
     """Performs an active Redis PING and measures latency."""
     res = await check_redis_health()
+    if res.status != "healthy":
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+    return res
+
+
+@router.get(
+    "/qdrant",
+    response_model=QdrantHealthResponse,
+    summary="Qdrant Vector Database Health Probe",
+)
+async def get_qdrant_health(
+    response: Response,
+) -> QdrantHealthResponse:
+    """Performs an active Qdrant vector database probe and measures latency."""
+    res = await check_qdrant_health()
     if res.status != "healthy":
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
     return res

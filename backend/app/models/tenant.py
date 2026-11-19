@@ -1,14 +1,18 @@
-"""Multi-tenant Organization, Building, and Physical Kiosk Hardware models."""
+"""Multi-tenant Organization, Branch, and Physical Kiosk Hardware models."""
 
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, String
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
+from sqlalchemy import Boolean, DateTime, ForeignKey, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 from app.models.base import TimestampMixin, UUIDPrimaryKeyMixin
+
+if TYPE_CHECKING:
+    from app.models.user import User
 
 
 class Tenant(Base, UUIDPrimaryKeyMixin, TimestampMixin):
@@ -23,18 +27,22 @@ class Tenant(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     # Relationships
-    buildings: Mapped[List["Building"]] = relationship(
-        "Building", back_populates="tenant", cascade="all, delete-orphan"
+    branches: Mapped[List["Branch"]] = relationship(
+        "Branch", back_populates="tenant", cascade="all, delete-orphan", lazy="selectin"
     )
+    tenant_settings: Mapped[List["TenantSetting"]] = relationship(
+        "TenantSetting", back_populates="tenant", cascade="all, delete-orphan", lazy="selectin"
+    )
+    users: Mapped[List["User"]] = relationship("User", back_populates="tenant", cascade="all, delete-orphan")
     kiosks: Mapped[List["KioskDevice"]] = relationship(
         "KioskDevice", back_populates="tenant", cascade="all, delete-orphan"
     )
 
 
-class Building(Base, UUIDPrimaryKeyMixin, TimestampMixin):
-    """Physical office campus or building location."""
+class Branch(Base, UUIDPrimaryKeyMixin, TimestampMixin):
+    """Physical office branch location under a tenant."""
 
-    __tablename__ = "buildings"
+    __tablename__ = "branches"
 
     tenant_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
@@ -43,15 +51,42 @@ class Building(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         index=True,
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
+    code: Mapped[str] = mapped_column(String(50), nullable=False)
     address: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    city: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    state: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    country: Mapped[Optional[str]] = mapped_column(String(100), default="US", nullable=True)
     timezone: Mapped[str] = mapped_column(String(100), default="UTC", nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     # Relationships
-    tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="buildings")
+    tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="branches")
     kiosks: Mapped[List["KioskDevice"]] = relationship(
-        "KioskDevice", back_populates="building", cascade="all, delete-orphan"
+        "KioskDevice", back_populates="branch", cascade="all, delete-orphan"
     )
+
+    __table_args__ = (UniqueConstraint("tenant_id", "code", name="uq_branches_tenant_id_code"),)
+
+
+class TenantSetting(Base, UUIDPrimaryKeyMixin, TimestampMixin):
+    """Granular per-tenant configuration and feature toggles."""
+
+    __tablename__ = "tenant_settings"
+
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    key: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    value: Mapped[Dict[str, Any]] = mapped_column(JSONB, default=dict, nullable=False)
+    is_encrypted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+    # Relationships
+    tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="tenant_settings")
+
+    __table_args__ = (UniqueConstraint("tenant_id", "key", name="uq_tenant_settings_tenant_id_key"),)
 
 
 class KioskDevice(Base, UUIDPrimaryKeyMixin, TimestampMixin):
@@ -65,9 +100,9 @@ class KioskDevice(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         nullable=False,
         index=True,
     )
-    building_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+    branch_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("buildings.id", ondelete="SET NULL"),
+        ForeignKey("branches.id", ondelete="SET NULL"),
         nullable=True,
         index=True,
     )
@@ -75,13 +110,11 @@ class KioskDevice(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     hardware_serial: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     ip_address: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
-    status: Mapped[str] = mapped_column(String(50), default="offline", nullable=False)  # online, offline, maintenance
+    status: Mapped[str] = mapped_column(String(50), default="offline", nullable=False)
     capabilities: Mapped[Dict[str, Any]] = mapped_column(JSONB, default=dict, nullable=False)
-    last_heartbeat_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    last_heartbeat_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     # Relationships
     tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="kiosks")
-    building: Mapped[Optional["Building"]] = relationship("Building", back_populates="kiosks")
+    branch: Mapped[Optional["Branch"]] = relationship("Branch", back_populates="kiosks")

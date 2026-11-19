@@ -1,10 +1,11 @@
 """Test suite for root discovery, health checks, and correlation IDs."""
 
 from unittest.mock import AsyncMock, patch
+
 import pytest
 from httpx import AsyncClient
 
-from app.schemas.health import DatabaseHealthResponse, RedisHealthResponse
+from app.schemas.health import DatabaseHealthResponse, QdrantHealthResponse, RedisHealthResponse
 
 
 @pytest.mark.asyncio
@@ -104,6 +105,48 @@ async def test_redis_health_failure(client: AsyncClient):
         data = response.json()
         assert data["status"] == "unhealthy"
         assert "Connection refused" in data["error"]
+
+
+@pytest.mark.asyncio
+async def test_qdrant_health_success(client: AsyncClient):
+    """Verify GET /api/v1/health/qdrant returns 200 when Qdrant responds."""
+    with patch(
+        "app.api.v1.endpoints.health.check_qdrant_health",
+        new=AsyncMock(
+            return_value=QdrantHealthResponse(
+                name="qdrant",
+                status="healthy",
+                latency_ms=2.1,
+                details={"host": "localhost", "port": 6333, "collections_count": 1},
+            )
+        ),
+    ):
+        response = await client.get("/api/v1/health/qdrant")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["name"] == "qdrant"
+        assert data["status"] == "healthy"
+
+
+@pytest.mark.asyncio
+async def test_qdrant_health_failure(client: AsyncClient):
+    """Verify GET /api/v1/health/qdrant returns 503 when Qdrant is unreachable."""
+    with patch(
+        "app.api.v1.endpoints.health.check_qdrant_health",
+        new=AsyncMock(
+            return_value=QdrantHealthResponse(
+                name="qdrant",
+                status="unhealthy",
+                latency_ms=25.0,
+                error="Qdrant connection refused",
+            )
+        ),
+    ):
+        response = await client.get("/api/v1/health/qdrant")
+        assert response.status_code == 503
+        data = response.json()
+        assert data["status"] == "unhealthy"
+        assert "Qdrant connection refused" in data["error"]
 
 
 @pytest.mark.asyncio

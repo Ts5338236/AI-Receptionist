@@ -8,13 +8,11 @@ backend_dir = Path(__file__).resolve().parent.parent
 if str(backend_dir) not in sys.path:
     sys.path.insert(0, str(backend_dir))
 
-import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
-from app.core.config import settings
 from app.db.base import Base
 from app.db.session import get_db
 from app.main import app
@@ -56,6 +54,7 @@ async def db_session() -> AsyncSession:
 @pytest_asyncio.fixture(scope="function")
 async def client(db_session: AsyncSession) -> AsyncClient:
     """Provides an async HTTP client wired with dependency overrides."""
+
     async def override_get_db():
         yield db_session
 

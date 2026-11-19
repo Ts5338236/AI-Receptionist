@@ -1,5 +1,5 @@
 import Link from "next";
-import { Monitor, LayoutDashboard, Shield, LogIn, Cpu, Database, Server, CheckCircle2 } from "lucide-react";
+import { Monitor, LayoutDashboard, Shield, LogIn, Cpu, Database, Server, CheckCircle2, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -113,21 +113,21 @@ export default function HomePage() {
           </Card>
         </Link>
 
-        {/* Authentication */}
-        <Link href="/login" className="group">
+        {/* Settings */}
+        <Link href="/settings" className="group">
           <Card className="h-full hover:border-slate-700 hover:bg-slate-900/90 transition-all duration-200">
             <CardHeader>
-              <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                <LogIn className="w-6 h-6 text-emerald-400" />
+              <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                <Settings className="w-6 h-6 text-amber-400" />
               </div>
-              <CardTitle className="text-lg">Enterprise Auth</CardTitle>
+              <CardTitle className="text-lg">Settings & Policies</CardTitle>
               <CardDescription>
-                Secure portal login for reception managers, security staff, and tenant administrators.
+                Configure organization branding, kiosk voice greetings, badge rules, and security.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <span className="text-xs font-mono text-slate-400 flex items-center gap-1">
-                Route: /login &rarr;
+                Route: /settings &rarr;
               </span>
             </CardContent>
           </Card>

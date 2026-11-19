@@ -1,5 +1,5 @@
 import Link from "next";
-import { LayoutDashboard, Shield, Monitor, Bell, User, LogOut, Cpu } from "lucide-react";
+import { LayoutDashboard, Shield, Monitor, Bell, User, LogOut, Cpu, Settings } from "lucide-react";
 
 export default function AdminLayout({
   children,
@@ -39,6 +39,13 @@ export default function AdminLayout({
             >
               <Shield className="w-4 h-4 text-purple-400" />
               Kiosk Fleet & Devices
+            </Link>
+            <Link
+              href="/settings"
+              className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+            >
+              <Settings className="w-4 h-4 text-amber-400" />
+              Settings & Policies
             </Link>
             <Link
               href="/kiosk"

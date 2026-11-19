@@ -2,14 +2,21 @@
 
 from app.db.base import Base
 from app.models.audit import AuditLog
-from app.models.tenant import Building, KioskDevice, Tenant
+from app.models.tenant import Branch, KioskDevice, Tenant, TenantSetting
+from app.models.user import Permission, Role, RolePermission, User, UserRole
 from app.models.visitor import Visitor, VisitorSession
 
 __all__ = [
     "Base",
     "Tenant",
-    "Building",
+    "Branch",
+    "TenantSetting",
     "KioskDevice",
+    "User",
+    "Role",
+    "Permission",
+    "UserRole",
+    "RolePermission",
     "Visitor",
     "VisitorSession",
     "AuditLog",
