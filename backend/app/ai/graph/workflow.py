@@ -121,6 +121,9 @@ async def select_action(state: ConversationState) -> ConversationState:
     elif intent == IntentType.APPOINTMENT_BOOKING:
         state["selected_tool"] = "create_appointment"
         state["tool_arguments"] = {}
+    elif intent in (IntentType.POLICY_QUESTION, IntentType.FAQ, IntentType.GENERAL_INQUIRY):
+        state["selected_tool"] = "search_knowledge_base"
+        state["tool_arguments"] = {"query": state["normalized_input"]}
     else:
         state["selected_tool"] = None
 

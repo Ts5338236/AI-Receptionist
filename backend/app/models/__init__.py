@@ -3,6 +3,12 @@
 from app.db.base import Base
 from app.models.audit import AuditLog
 from app.models.conversation import Conversation, ConversationMessage
+from app.models.knowledge import (
+    DocumentChunk,
+    DocumentProcessingJob,
+    DocumentVersion,
+    KnowledgeDocument,
+)
 from app.models.tenant import Branch, KioskDevice, Tenant, TenantSetting
 from app.models.user import Permission, Role, RolePermission, User, UserRole
 from app.models.visitor import Visitor, VisitorSession
@@ -22,5 +28,9 @@ __all__ = [
     "VisitorSession",
     "Conversation",
     "ConversationMessage",
+    "KnowledgeDocument",
+    "DocumentVersion",
+    "DocumentChunk",
+    "DocumentProcessingJob",
     "AuditLog",
 ]

@@ -91,5 +91,16 @@ class Settings(BaseSettings):
     CONVERSATION_MAX_TURNS: int = 30
     CONVERSATION_RETENTION_DAYS: int = 7
 
+    # Enterprise RAG & Knowledge Base Settings (Phase 6)
+    EMBEDDING_PROVIDER: str = "openai"
+    OPENAI_EMBEDDING_MODEL: str = "text-embedding-3-small"
+    EMBEDDING_DIMENSION: int = 1536
+    RAG_CHUNK_SIZE: int = 500
+    RAG_CHUNK_OVERLAP: int = 100
+    RAG_TOP_K: int = 3
+    RAG_SIMILARITY_THRESHOLD: float = 0.70
+    MAX_DOCUMENT_SIZE_BYTES: int = 26214400  # 25 MB
+    UPLOAD_STORAGE_DIR: str = "storage/documents"
+
 
 settings = Settings()

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LayoutDashboard, Shield, Monitor, Bell, User, LogOut, Cpu, Settings } from "lucide-react";
+import { LayoutDashboard, Shield, Monitor, Bell, User, LogOut, Cpu, Settings, BookOpen } from "lucide-react";
 
 export default function AdminLayout({
   children,
@@ -32,6 +32,13 @@ export default function AdminLayout({
             >
               <LayoutDashboard className="w-4 h-4 text-sky-400" />
               Visitor Dashboard
+            </Link>
+            <Link
+              href="/admin/knowledge"
+              className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+            >
+              <BookOpen className="w-4 h-4 text-indigo-400" />
+              Knowledge Base
             </Link>
             <Link
               href="/admin"

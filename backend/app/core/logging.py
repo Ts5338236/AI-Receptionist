@@ -55,3 +55,8 @@ def setup_logging(log_level: str = "INFO") -> logging.Logger:
     logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
 
     return logger
+
+
+def get_logger(name: str = "") -> logging.Logger:
+    """Returns a named logger instance."""
+    return logging.getLogger(name)
